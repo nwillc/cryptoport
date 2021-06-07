@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 )
@@ -13,7 +12,7 @@ import (
 type AppID string
 
 const (
-	defaultHost     = "api.NomicsCurrencyService.com"
+	defaultHost     = "api.nomics.com"
 	defaultBasePath = "v1"
 	queryAPI        = "key"
 )
@@ -43,7 +42,6 @@ func (c *Client) get(path string, queryArgs map[string]string, payload interface
 	if err != nil {
 		return err
 	}
-	log.Println("URL", absURL.String())
 	response, err := http.Get(absURL.String())
 	if err != nil {
 		return err

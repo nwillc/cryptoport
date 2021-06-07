@@ -1,7 +1,7 @@
 package main
 
-import "log"
+import "github.com/nwillc/cryptoport/pkg/commands"
 
 func main() {
-	log.Println("Start")
+	_ = commands.Execute()
 }
