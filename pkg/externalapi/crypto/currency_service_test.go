@@ -13,7 +13,7 @@ func TestNewNomicsCurrencyService(t *testing.T) {
 }
 
 func Test_nomics_Ticker(t *testing.T) {
-	appID := AppID("b0a17aba4805396e04667c975bcd5c3c0a6c480a")
+	appID := AppID("")
 	client, err := NewClient(appID)
 	require.NoError(t, err)
 	require.NotNil(t, client)
