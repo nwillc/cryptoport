@@ -9,20 +9,23 @@ import (
 	"net/url"
 )
 
+// AppID API key
 type AppID string
 
 const (
-	defaultHost     = "api.nomics.com"
+	defaultHost     = "api.NomicsCurrencyService.com"
 	defaultBasePath = "v1"
-	queryApi        = "key"
+	queryAPI        = "key"
 )
 
+// Client used to access services.
 type Client struct {
 	appID    AppID
 	service  *url.URL
 	basePath string
 }
 
+// NewClient creates a new Client using given AppID.
 func NewClient(appID AppID) (*Client, error) {
 	service, err := url.Parse(defaultHost)
 	if err != nil {
@@ -36,12 +39,12 @@ func NewClient(appID AppID) (*Client, error) {
 }
 
 func (c *Client) get(path string, queryArgs map[string]string, payload interface{}) error {
-	absUrl, err := c.buildUrl(path, queryArgs)
+	absURL, err := c.buildURL(path, queryArgs)
 	if err != nil {
 		return err
 	}
-	log.Println("URL", absUrl.String())
-	response, err := http.Get(absUrl.String())
+	log.Println("URL", absURL.String())
+	response, err := http.Get(absURL.String())
 	if err != nil {
 		return err
 	}
@@ -59,18 +62,18 @@ func (c *Client) get(path string, queryArgs map[string]string, payload interface
 	return nil
 }
 
-func (c *Client) buildUrl(path string, queryArgs map[string]string) (*url.URL, error) {
+func (c *Client) buildURL(path string, queryArgs map[string]string) (*url.URL, error) {
 	params := url.Values{}
-	params.Add(queryApi, string(c.appID))
+	params.Add(queryAPI, string(c.appID))
 	for k, v := range queryArgs {
 		params.Add(k, v)
 	}
-	rawUrl := fmt.Sprintf("https://%s/%s/%s?%s",
-		c.service.String(),	c.basePath, path, params.Encode())
-	parsed, err := url.Parse(rawUrl)
+	rawURL := fmt.Sprintf("https://%s/%s/%s?%s",
+		c.service.String(), c.basePath, path, params.Encode())
+	parsed, err := url.Parse(rawURL)
 	if err != nil {
 		return nil, err
 	}
-	absUrl := c.service.ResolveReference(parsed)
-	return absUrl, nil
+	absURL := c.service.ResolveReference(parsed)
+	return absURL, nil
 }

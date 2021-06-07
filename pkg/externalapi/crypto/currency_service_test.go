@@ -20,8 +20,8 @@ func Test_nomics_Ticker(t *testing.T) {
 	service := NewNomicsCurrencyService(client)
 	require.NotNil(t, service)
 	currencies := []Currency{"BTC", "ETH"}
-	periods  := []Period{"1d"}
-	ticker, err := service.Ticker(currencies, periods)
+	periods := []Period{"1d"}
+	ticker, err := service.Tickers(currencies, periods)
 	assert.NoError(t, err)
 	fmt.Println(ticker)
 }

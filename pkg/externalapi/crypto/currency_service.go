@@ -4,31 +4,39 @@ const (
 	tickerPath = "currencies/ticker"
 )
 
+// CurrencyService provides services to do with crypto currencies
 type CurrencyService interface {
-	Ticker(currency []Currency, period []Period) ([]TickerInfo, error)
+	Tickers(currency []Currency, period []Period) (map[Currency]TickerInfo, error)
 }
 
-type nomics struct {
+// NomicsCurrencyService is a CurrencyService implemented using Nomics API.
+type NomicsCurrencyService struct {
 	client *Client
 }
 
-var _ CurrencyService = (*nomics)(nil)
+var _ CurrencyService = (*NomicsCurrencyService)(nil)
 
-func NewNomicsCurrencyService(client *Client) *nomics {
-	return &nomics{
+// NewNomicsCurrencyService creates a Nomics based CurrencyService.
+func NewNomicsCurrencyService(client *Client) *NomicsCurrencyService {
+	return &NomicsCurrencyService{
 		client: client,
 	}
 }
 
-func (n nomics) Ticker(currencies []Currency, periods []Period) ([]TickerInfo, error) {
+// Tickers returns TickerInfo for the Currency list and Period list provides.
+func (n NomicsCurrencyService) Tickers(currencies []Currency, periods []Period) (map[Currency]TickerInfo, error) {
 	params := map[string]string{
 		"ids":      CurrencyList(currencies),
 		"interval": PeriodList(periods),
 	}
-	var ti = make([]TickerInfo,0)
-	err := n.client.get(tickerPath, params, &ti)
+	var tiList = make([]TickerInfo, 0)
+	err := n.client.get(tickerPath, params, &tiList)
 	if err != nil {
 		return nil, err
 	}
-	return ti, nil
+	var mapped = make(map[Currency]TickerInfo)
+	for _, ti := range tiList {
+		mapped[ti.Currency] = ti
+	}
+	return mapped, nil
 }

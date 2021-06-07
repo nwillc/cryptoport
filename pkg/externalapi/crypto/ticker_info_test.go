@@ -6,7 +6,7 @@ import (
 )
 
 func TestCurrencyList(t *testing.T) {
-	cl := []Currency{"A","B","C"}
+	cl := []Currency{"A", "B", "C"}
 	list := CurrencyList(cl)
 	assert.Equal(t, "A,B,C", list)
 }
