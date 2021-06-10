@@ -2,15 +2,16 @@ package model
 
 import (
 	"github.com/nwillc/cryptoport/pkg/externalapi/crypto"
+	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
-	"reflect"
+	"github.com/stretchr/testify/require"
 	"testing"
 )
 
 func TestPosition_String(t *testing.T) {
 	type fields struct {
 		Currency crypto.Currency
-		Holding  float64
+		Holding  decimal.Decimal
 	}
 	tests := []struct {
 		name   string
@@ -21,17 +22,17 @@ func TestPosition_String(t *testing.T) {
 			name: "BTC_1",
 			fields: fields{
 				Currency: "BTC",
-				Holding:  1,
+				Holding:  decimal.NewFromFloat(1.0),
 			},
-			want: "1.000000 BTC",
+			want: "1 BTC",
 		},
 		{
 			name: "ETH_Fractional",
 			fields: fields{
 				Currency: "ETH",
-				Holding:  .001,
+				Holding:  decimal.NewFromFloat(.001),
 			},
-			want: "0.001000 ETH",
+			want: "0.001 ETH",
 		},
 	}
 	for _, tt := range tests {
@@ -59,10 +60,10 @@ func TestPortfolio_String(t *testing.T) {
 			fields: fields{
 				Positions: []Position{{
 					Currency: "BTC",
-					Holding:  1,
+					Holding:  decimal.NewFromFloat(1),
 				}},
 			},
-			want: "1.000000 BTC\n",
+			want: "1 BTC\n",
 		},
 		{
 			name: "BTCETC",
@@ -70,15 +71,15 @@ func TestPortfolio_String(t *testing.T) {
 				Positions: []Position{
 					{
 						Currency: "ETH",
-						Holding:  .5,
+						Holding:  decimal.NewFromFloat(.5),
 					},
 					{
 						Currency: "BTC",
-						Holding:  1,
+						Holding:  decimal.NewFromFloat(1),
 					},
 				},
 			},
-			want: "0.500000 ETH\n1.000000 BTC\n",
+			want: "0.5 ETH\n1 BTC\n",
 		},
 	}
 	for _, tt := range tests {
@@ -102,7 +103,7 @@ func TestPortfolio_Values(t *testing.T) {
 		name   string
 		fields fields
 		args   args
-		want   map[Position]float64
+		want   map[crypto.Currency]decimal.Decimal
 	}{
 		{
 			name: "BTC_Two",
@@ -110,7 +111,7 @@ func TestPortfolio_Values(t *testing.T) {
 				Positions: []Position{
 					{
 						Currency: "BTC",
-						Holding:  2,
+						Holding:  decimal.NewFromFloat(2),
 					},
 				},
 			},
@@ -118,16 +119,13 @@ func TestPortfolio_Values(t *testing.T) {
 				prices: map[crypto.Currency]crypto.TickerInfo{
 					"BTC": {
 						Currency:  "BTC",
-						Price:     1,
+						Price:     decimal.NewFromFloat(1),
 						Timestamp: "",
 					},
 				},
 			},
-			want: map[Position]float64{
-				{
-					Currency: "BTC",
-					Holding:  2,
-				}: 2,
+			want: map[crypto.Currency]decimal.Decimal{
+				"BTC": decimal.NewFromFloat(2),
 			},
 		},
 	}
@@ -136,8 +134,10 @@ func TestPortfolio_Values(t *testing.T) {
 			p := Portfolio{
 				Positions: tt.fields.Positions,
 			}
-			if got := p.Values(tt.args.prices); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Values() = %v, want %v", got, tt.want)
+			got := p.Values(tt.args.prices)
+			require.Equal(t, len(got), len(tt.want))
+			for k, v := range got {
+				assert.True(t, v.Equal(tt.want[k.Currency]), "key %s:%s != %s:%s", k, v, k, tt.want[k.Currency])
 			}
 		})
 	}

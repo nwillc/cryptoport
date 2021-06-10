@@ -1,20 +1,18 @@
 package crypto
 
 import (
+	"github.com/shopspring/decimal"
 	"strings"
 )
 
 // Currency name, BTC, ETH etc.
 type Currency string
 
-// Price representation.
-type Price float64
-
 // TickerInfo contains a Price for a Currency at a given Timestamp.
 type TickerInfo struct {
-	Currency  Currency `json:"currency"`
-	Price     Price    `json:"price,string"`
-	Timestamp DateTime `json:"price_timestamp"`
+	Currency  Currency        `json:"currency"`
+	Price     decimal.Decimal `json:"price,string"`
+	Timestamp DateTime        `json:"price_timestamp"`
 }
 
 // String implements fmt.Stringer for Currency.

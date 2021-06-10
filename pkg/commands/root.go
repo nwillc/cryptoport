@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/nwillc/cryptoport/pkg/externalapi/crypto"
 	"github.com/nwillc/cryptoport/pkg/model"
+	"github.com/shopspring/decimal"
 	"github.com/spf13/cobra"
 	"os"
 )
@@ -53,8 +54,8 @@ func portfolio(_ *cobra.Command, _ []string) {
 		panic(err)
 	}
 	values := conf.Portfolio.Values(tickers)
-	var total float64
-	confValues := make(map[crypto.Currency]float64)
+	var total decimal.Decimal
+	confValues := make(map[crypto.Currency]decimal.Decimal)
 	color := colorWhite
 	for k, v := range values {
 		if conf.Values != nil {
@@ -63,19 +64,19 @@ func portfolio(_ *cobra.Command, _ []string) {
 				color = deltaColor(hv, v)
 			}
 		}
-		fmt.Printf("%s%20s %12.2f %s\n", color, k, v, colorReset)
+		fmt.Printf("%s%20s %12s%s\n", color, k, v.StringFixed(2), colorReset)
 		confValues[k.Currency] = v
-		total += v
+		total = total.Add(v)
 	}
 	color = colorWhite
 	if conf.Values != nil {
-		var oldValue float64
+		var oldValue decimal.Decimal
 		for _, v := range *conf.Values {
-			oldValue += v
+			oldValue = oldValue.Add(v)
 		}
 		color = deltaColor(oldValue, total)
 	}
-	fmt.Printf("%s%20s %12.2f%s\n", color, "Total:", total, colorReset)
+	fmt.Printf("%s%20s %12s%s\n", color, "Total:", total.StringFixed(2), colorReset)
 
 	conf.Values = &confValues
 	err = model.WriteConfig(*conf, fileName)
@@ -84,12 +85,13 @@ func portfolio(_ *cobra.Command, _ []string) {
 	}
 }
 
-func deltaColor(old, now float64) string {
-	if old > now {
-		return colorRed
-	}
-	if old < now {
+func deltaColor(old, now decimal.Decimal) string {
+	switch {
+	case old.LessThan(now):
 		return colorGreen
+	case old.GreaterThan(now):
+		return colorRed
+	default:
+		return colorWhite
 	}
-	return colorWhite
 }

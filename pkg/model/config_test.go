@@ -2,6 +2,7 @@ package model
 
 import (
 	"github.com/nwillc/cryptoport/pkg/externalapi/crypto"
+	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io/ioutil"
@@ -22,7 +23,7 @@ func TestWriteReadNoValues(t *testing.T) {
 			Positions: []Position{
 				{
 					Currency: "BTC",
-					Holding:  1,
+					Holding:  decimal.NewFromFloat(1.0),
 				},
 			},
 		},
@@ -52,12 +53,12 @@ func TestWriteReadWithValues(t *testing.T) {
 			Positions: []Position{
 				{
 					Currency: "BTC",
-					Holding:  1,
+					Holding:  decimal.NewFromFloat(1.0),
 				},
 			},
 		},
-		Values: &map[crypto.Currency]float64{
-			"BTC": 40,
+		Values: &map[crypto.Currency]decimal.Decimal{
+			"BTC": decimal.NewFromFloat(40.0),
 		},
 	}
 
