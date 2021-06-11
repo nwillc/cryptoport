@@ -2,14 +2,14 @@ package model
 
 import (
 	"fmt"
-	"github.com/nwillc/cryptoport/pkg/externalapi/crypto"
+	crypto2 "github.com/nwillc/cryptoport/externalapi/crypto"
 	"github.com/shopspring/decimal"
 	"strings"
 )
 
 // Position represents the Holding of a given Currency.
 type Position struct {
-	Currency crypto.Currency
+	Currency crypto2.Currency
 	Holding  decimal.Decimal
 }
 
@@ -36,7 +36,7 @@ func (p Portfolio) String() string {
 }
 
 // Values calculated for a Portfolio at given crypto.TickerInfo of the crypto.Currency.
-func (p Portfolio) Values(prices map[crypto.Currency]crypto.TickerInfo) map[Position]decimal.Decimal {
+func (p Portfolio) Values(prices map[crypto2.Currency]crypto2.TickerInfo) map[Position]decimal.Decimal {
 	values := make(map[Position]decimal.Decimal)
 	for _, position := range p.Positions {
 		ti, ok := prices[position.Currency]

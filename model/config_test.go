@@ -1,7 +1,7 @@
 package model
 
 import (
-	"github.com/nwillc/cryptoport/pkg/externalapi/crypto"
+	crypto2 "github.com/nwillc/cryptoport/externalapi/crypto"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -57,7 +57,7 @@ func TestWriteReadWithValues(t *testing.T) {
 				},
 			},
 		},
-		Values: &map[crypto.Currency]decimal.Decimal{
+		Values: &map[crypto2.Currency]decimal.Decimal{
 			"BTC": decimal.NewFromFloat(40.0),
 		},
 	}
@@ -71,5 +71,7 @@ func TestWriteReadWithValues(t *testing.T) {
 	assert.Equal(t, conf.AppID, conf2.AppID)
 	assert.Equal(t, conf.Portfolio, conf2.Portfolio)
 	require.NotNil(t, conf2.Values)
-	assert.Equal(t, *conf.Values, *conf2.Values)
+	for k, v := range *conf.Values {
+		assert.True(t, v.Equal((*conf2.Values)[k]))
+	}
 }

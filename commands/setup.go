@@ -2,7 +2,7 @@ package commands
 
 import (
 	"fmt"
-	"github.com/nwillc/cryptoport/pkg/model"
+	model2 "github.com/nwillc/cryptoport/model"
 	"github.com/spf13/cobra"
 	"os"
 )
@@ -14,20 +14,20 @@ func init() {
 var setupCmd = &cobra.Command{
 	Use:   "setup",
 	Short: "Setup your portfolio configuration.",
-	Long:  "Setup your portfolio configuration and save to " + model.ConfFile,
+	Long:  "Setup your portfolio configuration and save to " + model2.ConfFile,
 	Run:   setup,
 }
 
 func setup(_ *cobra.Command, _ []string) {
-	conf := model.Config{
+	conf := model2.Config{
 		AppID:     "",
-		Portfolio: model.Portfolio{},
+		Portfolio: model2.Portfolio{},
 	}
 	fmt.Print("Enter Nomics API_ID: ")
 	fmt.Scanf("%s", &conf.AppID)
 	fmt.Println("Enter your crypto holdings, the currency name and the holding size. Blank currency when done.")
 	for {
-		position := model.Position{}
+		position := model2.Position{}
 		fmt.Print("  Currency: ")
 		fmt.Scanf("%s", &position.Currency)
 		if position.Currency == "" {
@@ -42,8 +42,8 @@ func setup(_ *cobra.Command, _ []string) {
 	if err != nil {
 		panic(err)
 	}
-	fileName := fmt.Sprintf("%s/%s", homeDir, model.ConfFile)
-	err = model.WriteConfig(conf, fileName)
+	fileName := fmt.Sprintf("%s/%s", homeDir, model2.ConfFile)
+	err = model2.WriteConfig(conf, fileName)
 	if err != nil {
 		panic(err)
 	}

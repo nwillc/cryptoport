@@ -20,5 +20,5 @@ func TestClient_buildUrl(t *testing.T) {
 	require.NoError(t, err)
 	url, err := client.buildURL("test", map[string]string{"now": "later"})
 	require.NoError(t, err)
-	assert.Equal(t, "https://api.NomicsCurrencyService.com/v1/test?key=foo&now=later", url)
+	assert.Equal(t, "https://api.nomics.com/v1/test?key=foo&now=later", url.String())
 }

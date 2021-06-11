@@ -6,12 +6,14 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 )
 
 // AppID API key
 type AppID string
 
 const (
+	defaultAppIDEnv = "NOMICS_APP_ID"
 	defaultHost     = "api.nomics.com"
 	defaultBasePath = "v1"
 	queryAPI        = "key"
@@ -22,6 +24,10 @@ type Client struct {
 	appID    AppID
 	service  *url.URL
 	basePath string
+}
+
+func DefaultAppID() AppID {
+	return AppID(os.Getenv(defaultAppIDEnv))
 }
 
 // NewClient creates a new Client using given AppID.

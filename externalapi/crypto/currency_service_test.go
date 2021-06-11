@@ -13,10 +13,7 @@ func TestNewNomicsCurrencyService(t *testing.T) {
 }
 
 func Test_nomics_Ticker(t *testing.T) {
-	appID := AppID("")
-	client, err := NewClient(appID)
-	require.NoError(t, err)
-	require.NotNil(t, client)
+	client := MightSkipIntegrationTest(t)
 	service := NewNomicsCurrencyService(client)
 	require.NotNil(t, service)
 	currencies := []Currency{"BTC", "ETH"}

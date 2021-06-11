@@ -2,8 +2,8 @@ package commands
 
 import (
 	"fmt"
-	"github.com/nwillc/cryptoport/pkg/externalapi/crypto"
-	"github.com/nwillc/cryptoport/pkg/model"
+	crypto2 "github.com/nwillc/cryptoport/externalapi/crypto"
+	model2 "github.com/nwillc/cryptoport/model"
 	"github.com/shopspring/decimal"
 	"github.com/spf13/cobra"
 	"os"
@@ -34,18 +34,18 @@ func portfolio(_ *cobra.Command, _ []string) {
 	if err != nil {
 		panic(err)
 	}
-	fileName := fmt.Sprintf("%s/%s", homeDir, model.ConfFile)
-	conf, err := model.ReadConfig(fileName)
+	fileName := fmt.Sprintf("%s/%s", homeDir, model2.ConfFile)
+	conf, err := model2.ReadConfig(fileName)
 	if err != nil {
 		panic(err)
 	}
-	client, err := crypto.NewClient(conf.AppID)
+	client, err := crypto2.NewClient(conf.AppID)
 	if err != nil {
 		panic(err)
 	}
-	service := crypto.NewNomicsCurrencyService(client)
-	periods := []crypto.Period{"1d"}
-	var currencies []crypto.Currency
+	service := crypto2.NewNomicsCurrencyService(client)
+	periods := []crypto2.Period{"1d"}
+	var currencies []crypto2.Currency
 	for _, position := range conf.Portfolio.Positions {
 		currencies = append(currencies, position.Currency)
 	}
@@ -55,7 +55,7 @@ func portfolio(_ *cobra.Command, _ []string) {
 	}
 	values := conf.Portfolio.Values(tickers)
 	var total decimal.Decimal
-	confValues := make(map[crypto.Currency]decimal.Decimal)
+	confValues := make(map[crypto2.Currency]decimal.Decimal)
 	color := colorWhite
 	for k, v := range values {
 		if conf.Values != nil {
@@ -79,7 +79,7 @@ func portfolio(_ *cobra.Command, _ []string) {
 	fmt.Printf("%s%20s %12s%s\n", color, "Total:", total.StringFixed(2), colorReset)
 
 	conf.Values = &confValues
-	err = model.WriteConfig(*conf, fileName)
+	err = model2.WriteConfig(*conf, fileName)
 	if err != nil {
 		panic(err)
 	}

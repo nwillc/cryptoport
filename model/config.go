@@ -2,7 +2,7 @@ package model
 
 import (
 	"encoding/json"
-	"github.com/nwillc/cryptoport/pkg/externalapi/crypto"
+	crypto2 "github.com/nwillc/cryptoport/externalapi/crypto"
 	"github.com/shopspring/decimal"
 	"io/ioutil"
 	"os"
@@ -15,9 +15,9 @@ const (
 
 // Config persisted configuration.
 type Config struct {
-	AppID     crypto.AppID                         `json:"app_id"`
-	Portfolio Portfolio                            `json:"portfolio"`
-	Values    *map[crypto.Currency]decimal.Decimal `json:"values,omitempty"`
+	AppID     crypto2.AppID                         `json:"app_id"`
+	Portfolio Portfolio                             `json:"portfolio"`
+	Values    *map[crypto2.Currency]decimal.Decimal `json:"values,omitempty"`
 }
 
 func WriteConfig(config Config, filename string) error {
