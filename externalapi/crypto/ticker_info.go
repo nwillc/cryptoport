@@ -11,7 +11,7 @@ type Currency string
 // TickerInfo contains a Price for a Currency at a given Timestamp.
 type TickerInfo struct {
 	Currency  Currency        `json:"currency"`
-	Price     decimal.Decimal `json:"price,string"`
+	Price     decimal.Decimal `json:"price"`
 	Timestamp DateTime        `json:"price_timestamp"`
 }
 
