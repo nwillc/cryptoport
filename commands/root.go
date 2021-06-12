@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"github.com/fatih/color"
 	crypto2 "github.com/nwillc/cryptoport/externalapi/crypto"
 	model2 "github.com/nwillc/cryptoport/model"
 	"github.com/shopspring/decimal"
@@ -9,11 +10,10 @@ import (
 	"os"
 )
 
-const (
-	colorRed   = "\033[31m"
-	colorGreen = "\033[32m"
-	colorWhite = "\033[37m"
-	colorReset = "\033[0m"
+var (
+	colorGreen = color.New(color.FgGreen)
+	colorRed   = color.New(color.FgRed)
+	colorWhite = color.New(color.FgWhite)
 )
 
 // Execute executes the root command.
@@ -64,7 +64,7 @@ func portfolio(_ *cobra.Command, _ []string) {
 				color = deltaColor(hv, v)
 			}
 		}
-		fmt.Printf("%s%20s %12s%s\n", color, k, v.StringFixed(2), colorReset)
+		_, _ = color.Printf("%20s %12s\n", k, v.StringFixed(2))
 		confValues[k.Currency] = v
 		total = total.Add(v)
 	}
@@ -76,7 +76,7 @@ func portfolio(_ *cobra.Command, _ []string) {
 		}
 		color = deltaColor(oldValue, total)
 	}
-	fmt.Printf("%s%20s %12s%s\n", color, "Total:", total.StringFixed(2), colorReset)
+	_, _ = color.Printf("%20s %12s\n", "Total:", total.StringFixed(2))
 
 	conf.Values = &confValues
 	err = model2.WriteConfig(*conf, fileName)
@@ -85,11 +85,11 @@ func portfolio(_ *cobra.Command, _ []string) {
 	}
 }
 
-func deltaColor(old, now decimal.Decimal) string {
+func deltaColor(previous, current decimal.Decimal) *color.Color {
 	switch {
-	case old.LessThan(now):
+	case previous.LessThan(current):
 		return colorGreen
-	case old.GreaterThan(now):
+	case previous.GreaterThan(current):
 		return colorRed
 	default:
 		return colorWhite
