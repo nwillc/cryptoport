@@ -5,6 +5,7 @@ import (
 	"testing"
 )
 
+// MightSkipIntegrationTest determines if integraation tests should run.
 func MightSkipIntegrationTest(t *testing.T) *Client {
 	t.Helper()
 	appID := DefaultAppID()

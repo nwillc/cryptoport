@@ -20,6 +20,7 @@ type Config struct {
 	Values    *map[crypto2.Currency]decimal.Decimal `json:"values,omitempty"`
 }
 
+// WriteConfig writes the Config given, as JSON to the filename given.
 func WriteConfig(config Config, filename string) error {
 	file, err := os.Create(filename)
 	if err != nil {
@@ -36,6 +37,7 @@ func WriteConfig(config Config, filename string) error {
 	return err
 }
 
+// ReadConfig instantiates a Config from the JSON filename given.
 func ReadConfig(filename string) (*Config, error) {
 	readFile, err := ioutil.ReadFile(filename)
 	if err != nil {

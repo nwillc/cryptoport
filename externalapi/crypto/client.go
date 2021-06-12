@@ -26,6 +26,7 @@ type Client struct {
 	basePath string
 }
 
+// DefaultAppID returns AppID based on NOMICS_APP_ID env variable.
 func DefaultAppID() AppID {
 	return AppID(os.Getenv(defaultAppIDEnv))
 }
