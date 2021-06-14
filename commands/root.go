@@ -14,6 +14,7 @@ var (
 	colorGreen = color.New(color.FgGreen)
 	colorRed   = color.New(color.FgRed)
 	colorWhite = color.New(color.FgWhite)
+	oneHundred = decimal.NewFromFloat(100.0)
 )
 
 // Execute executes the root command.
@@ -56,15 +57,16 @@ func portfolio(_ *cobra.Command, _ []string) {
 	values := conf.Portfolio.Values(tickers)
 	var total decimal.Decimal
 	confValues := make(map[crypto2.Currency]decimal.Decimal)
-	color := colorWhite
+	var color *color.Color
+	var change decimal.Decimal
 	for k, v := range values {
 		if conf.Values != nil {
 			hv, ok := (*conf.Values)[k.Currency]
 			if ok {
-				color = deltaColor(hv, v)
+				color, change = delta(hv, v)
 			}
 		}
-		_, _ = color.Printf("%20s %12s\n", k, v.StringFixed(2))
+		_, _ = color.Printf("%20s %12s (%6s%%)\n", k, v.StringFixed(2), change.StringFixed(2))
 		confValues[k.Currency] = v
 		total = total.Add(v)
 	}
@@ -74,9 +76,9 @@ func portfolio(_ *cobra.Command, _ []string) {
 		for _, v := range *conf.Values {
 			oldValue = oldValue.Add(v)
 		}
-		color = deltaColor(oldValue, total)
+		color, change = delta(oldValue, total)
 	}
-	_, _ = color.Printf("%20s %12s\n", "Total:", total.StringFixed(2))
+	_, _ = color.Printf("%20s %12s (%6s%%)\n", "Total:", total.StringFixed(2), change.StringFixed(2))
 
 	conf.Values = &confValues
 	err = model2.WriteConfig(*conf, fileName)
@@ -85,13 +87,19 @@ func portfolio(_ *cobra.Command, _ []string) {
 	}
 }
 
-func deltaColor(previous, current decimal.Decimal) *color.Color {
+func delta(previous, current decimal.Decimal) (*color.Color, decimal.Decimal) {
+	change := percentChange(previous, current)
 	switch {
-	case previous.LessThan(current):
-		return colorGreen
-	case previous.GreaterThan(current):
-		return colorRed
+	case change.GreaterThan(decimal.Zero):
+		return colorGreen, change
+	case change.LessThan(decimal.Zero):
+		return colorRed, change
 	default:
-		return colorWhite
+		return colorWhite, change
 	}
+}
+
+func percentChange(previous, current decimal.Decimal) decimal.Decimal {
+	delta := current.Sub(previous)
+	return delta.Div(previous).Mul(oneHundred)
 }
