@@ -9,15 +9,15 @@ import (
 
 // Position represents the Holding of a given Currency.
 type Position struct {
-	Currency crypto.Currency
-	Holding  decimal.Decimal
+	Currency crypto.Currency `json:"currency"`
+	Holding  decimal.Decimal `json:"holding"`
 }
 
 var _ fmt.Stringer = (*Position)(nil)
 
 // Portfolio a set of Position.
 type Portfolio struct {
-	Positions []Position
+	Positions []Position `json:"positions"`
 }
 
 var _ fmt.Stringer = (*Portfolio)(nil)
