@@ -60,9 +60,9 @@ func setup(_ *cobra.Command, _ []string) {
 			panic(err)
 		}
 		fileName := fmt.Sprintf("%s/%s", homeDir, model.ConfFile)
-		err = model.WriteConfig(conf, fileName)
-		if err != nil {
-			panic(err)
+		result := model.WriteConfig(conf, fileName)
+		if !result.Ok() {
+			panic(result.Error())
 		}
 	}
 }

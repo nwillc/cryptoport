@@ -3,6 +3,7 @@ package model
 import (
 	"fmt"
 	"github.com/nwillc/cryptoport/externalapi/crypto"
+	"github.com/nwillc/genfuncs/container"
 	"github.com/shopspring/decimal"
 	"strings"
 )
@@ -36,7 +37,7 @@ func (p Portfolio) String() string {
 }
 
 // Values calculated for a Portfolio at given crypto.TickerInfo of the crypto.Currency.
-func (p Portfolio) Values(prices map[crypto.Currency]crypto.TickerInfo) map[Position]decimal.Decimal {
+func (p Portfolio) Values(prices container.GMap[crypto.Currency, *crypto.TickerInfo]) container.GMap[Position, decimal.Decimal] {
 	values := make(map[Position]decimal.Decimal)
 	for _, position := range p.Positions {
 		ti, ok := prices[position.Currency]

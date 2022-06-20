@@ -1,8 +1,11 @@
 package crypto
 
 import (
-	"encoding/json"
 	"fmt"
+	"github.com/nwillc/cryptoport/gjson"
+	"github.com/nwillc/genfuncs"
+	"github.com/nwillc/genfuncs/container"
+	"github.com/nwillc/genfuncs/result"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -32,42 +35,34 @@ func DefaultAppID() AppID {
 }
 
 // NewClient creates a new Client using given AppID.
-func NewClient(appID AppID) (*Client, error) {
-	service, err := url.Parse(defaultHost)
-	if err != nil {
-		return nil, err
-	}
-	return &Client{
-		appID:    appID,
-		service:  service,
-		basePath: defaultBasePath,
-	}, nil
+func NewClient(appID AppID) *genfuncs.Result[*Client] {
+	service := genfuncs.NewResultError(url.Parse(defaultHost))
+	return result.Map(service, func(url *url.URL) *genfuncs.Result[*Client] {
+		return genfuncs.NewResult(&Client{
+			appID:    appID,
+			service:  url,
+			basePath: defaultBasePath,
+		})
+	})
 }
 
-func (c *Client) get(path string, queryArgs map[string]string, payload interface{}) error {
-	absURL, err := c.buildURL(path, queryArgs)
-	if err != nil {
-		return err
-	}
-	response, err := http.Get(absURL.String())
-	if err != nil {
-		return err
-	}
-	if response.StatusCode != 200 {
-		return fmt.Errorf("http response %d", response.StatusCode)
-	}
-	body, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		return err
-	}
-	err = json.Unmarshal(body, payload)
-	if err != nil {
-		return err
-	}
-	return nil
+func (c *Client) getTickerInfo(path string, queryArgs container.GMap[string, string]) *genfuncs.Result[*container.GSlice[TickerInfo]] {
+	absURL := c.buildURL(path, queryArgs)
+	response := result.Map(absURL, func(url *url.URL) *genfuncs.Result[*http.Response] {
+		return genfuncs.NewResultError(http.Get(url.String()))
+	})
+	body := result.Map(response, func(response *http.Response) *genfuncs.Result[[]byte] {
+		if response.StatusCode != 200 {
+			return genfuncs.NewError[[]byte](fmt.Errorf("http response %d", response.StatusCode))
+		}
+		return genfuncs.NewResultError(ioutil.ReadAll(response.Body))
+	})
+	return result.Map(body, func(bytes []byte) *genfuncs.Result[*container.GSlice[TickerInfo]] {
+		return gjson.Unmarshal[container.GSlice[TickerInfo]](bytes)
+	})
 }
 
-func (c *Client) buildURL(path string, queryArgs map[string]string) (*url.URL, error) {
+func (c *Client) buildURL(path string, queryArgs container.GMap[string, string]) *genfuncs.Result[*url.URL] {
 	params := url.Values{}
 	params.Add(queryAPI, string(c.appID))
 	for k, v := range queryArgs {
@@ -75,10 +70,8 @@ func (c *Client) buildURL(path string, queryArgs map[string]string) (*url.URL, e
 	}
 	rawURL := fmt.Sprintf("https://%s/%s/%s?%s",
 		c.service.String(), c.basePath, path, params.Encode())
-	parsed, err := url.Parse(rawURL)
-	if err != nil {
-		return nil, err
-	}
-	absURL := c.service.ResolveReference(parsed)
-	return absURL, nil
+	parsed := genfuncs.NewResultError(url.Parse(rawURL))
+	return result.Map(parsed, func(url *url.URL) *genfuncs.Result[*url.URL] {
+		return genfuncs.NewResult(c.service.ResolveReference(url))
+	})
 }

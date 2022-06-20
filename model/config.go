@@ -1,8 +1,10 @@
 package model
 
 import (
-	"encoding/json"
 	crypto2 "github.com/nwillc/cryptoport/externalapi/crypto"
+	"github.com/nwillc/cryptoport/gjson"
+	"github.com/nwillc/genfuncs"
+	"github.com/nwillc/genfuncs/result"
 	"github.com/shopspring/decimal"
 	"io/ioutil"
 	"os"
@@ -15,35 +17,29 @@ const (
 
 // Config persisted configuration.
 type Config struct {
-	AppID     crypto2.AppID                         `json:"app_id"`
-	Portfolio Portfolio                             `json:"portfolio"`
-	Values    *map[crypto2.Currency]decimal.Decimal `json:"values,omitempty"`
+	AppID     crypto2.AppID                        `json:"app_id"`
+	Portfolio Portfolio                            `json:"portfolio"`
+	Prices    map[crypto2.Currency]decimal.Decimal `json:"prices,omitempty"`
 }
 
 // WriteConfig writes the Config given, as JSON to the filename given.
-func WriteConfig(config Config, filename string) error {
-	file, err := os.Create(filename)
-	if err != nil {
-		return err
-	}
-	defer func() {
-		_ = file.Close()
-	}()
-	bytes, err := json.Marshal(&config)
-	if err != nil {
-		return err
-	}
-	_, err = file.Write(bytes)
-	return err
+func WriteConfig(config Config, filename string) *genfuncs.Result[int] {
+	results := gjson.Marshal(&config)
+	return result.Map(results, func(bytes []byte) *genfuncs.Result[int] {
+		file := genfuncs.NewResultError(os.Create(filename))
+		return result.Map(file, func(f *os.File) *genfuncs.Result[int] {
+			defer func() {
+				_ = f.Close()
+			}()
+			return genfuncs.NewResultError(f.Write(bytes))
+		})
+	})
 }
 
 // ReadConfig instantiates a Config from the JSON filename given.
-func ReadConfig(filename string) (*Config, error) {
-	readFile, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return nil, err
-	}
-	conf := &Config{}
-	err = json.Unmarshal(readFile, conf)
-	return conf, err
+func ReadConfig(filename string) *genfuncs.Result[*Config] {
+	readFile := genfuncs.NewResultError(ioutil.ReadFile(filename))
+	return result.Map(readFile, func(bytes []byte) *genfuncs.Result[*Config] {
+		return gjson.Unmarshal[Config](bytes)
+	})
 }

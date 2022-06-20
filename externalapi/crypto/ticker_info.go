@@ -1,8 +1,8 @@
 package crypto
 
 import (
+	"github.com/nwillc/genfuncs/container"
 	"github.com/shopspring/decimal"
-	"strings"
 )
 
 // Currency name, BTC, ETH etc.
@@ -21,19 +21,11 @@ func (c Currency) String() string {
 }
 
 // CurrencyList formats a list of Currency into a string.
-func CurrencyList(currencies []Currency) string {
-	var strs []string
-	for _, s := range currencies {
-		strs = append(strs, string(s))
-	}
-	return strings.Join(strs, ",")
+func CurrencyList(currencies container.GSlice[Currency]) string {
+	return currencies.JoinToString(func(c Currency) string { return c.String() }, ",", "", "")
 }
 
 // PeriodList formats a list of Period into a string.
-func PeriodList(periods []Period) string {
-	var strs []string
-	for _, s := range periods {
-		strs = append(strs, string(s))
-	}
-	return strings.Join(strs, ",")
+func PeriodList(periods container.GSlice[Period]) string {
+	return periods.JoinToString(func(p Period) string { return string(p) }, ",", "", "")
 }

@@ -2,6 +2,7 @@ package model
 
 import (
 	crypto2 "github.com/nwillc/cryptoport/externalapi/crypto"
+	"github.com/nwillc/genfuncs"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -11,12 +12,6 @@ import (
 )
 
 func TestWriteReadNoValues(t *testing.T) {
-	file, err := ioutil.TempFile("", "config")
-	require.NoError(t, err)
-	t.Cleanup(func() {
-		_ = os.Remove(file.Name())
-	})
-
 	conf := Config{
 		AppID: "foo",
 		Portfolio: Portfolio{
@@ -28,25 +23,26 @@ func TestWriteReadNoValues(t *testing.T) {
 			},
 		},
 	}
+	file := genfuncs.NewResultError(ioutil.TempFile("", "config"))
+	require.True(t, file.Ok())
+	fileName := file.OrEmpty().Name()
+	t.Cleanup(func() {
+		_ = os.Remove(fileName)
+	})
 
-	err = WriteConfig(conf, file.Name())
-	require.NoError(t, err)
+	result := WriteConfig(conf, fileName)
+	require.True(t, result.Ok())
 
-	conf2, err := ReadConfig(file.Name())
-	require.NoError(t, err)
+	conf2 := ReadConfig(fileName)
+	require.True(t, conf2.Ok())
 
-	assert.Equal(t, conf.AppID, conf2.AppID)
-	assert.Equal(t, conf.Portfolio, conf2.Portfolio)
-	assert.Nil(t, conf2.Values)
+	assert.Equal(t, conf.AppID, conf2.OrEmpty().AppID)
+	assert.Equal(t, conf.Portfolio, conf2.OrEmpty().Portfolio)
+	assert.Equal(t, 0, len(conf2.OrEmpty().Prices))
 }
 
 func TestWriteReadWithValues(t *testing.T) {
-	file, err := ioutil.TempFile("", "config")
-	require.NoError(t, err)
-	t.Cleanup(func() {
-		_ = os.Remove(file.Name())
-	})
-
+	price := decimal.NewFromFloat(40000.1)
 	conf := Config{
 		AppID: "foo",
 		Portfolio: Portfolio{
@@ -57,21 +53,23 @@ func TestWriteReadWithValues(t *testing.T) {
 				},
 			},
 		},
-		Values: &map[crypto2.Currency]decimal.Decimal{
-			"BTC": decimal.NewFromFloat(40.0),
-		},
+		Prices: map[crypto2.Currency]decimal.Decimal{"BTC": price},
 	}
 
-	err = WriteConfig(conf, file.Name())
-	require.NoError(t, err)
+	file := genfuncs.NewResultError(ioutil.TempFile("", "config"))
+	require.True(t, file.Ok())
+	fileName := file.OrEmpty().Name()
+	t.Cleanup(func() {
+		_ = os.Remove(fileName)
+	})
 
-	conf2, err := ReadConfig(file.Name())
-	require.NoError(t, err)
+	result := WriteConfig(conf, fileName)
+	require.True(t, result.Ok())
 
-	assert.Equal(t, conf.AppID, conf2.AppID)
-	assert.Equal(t, conf.Portfolio, conf2.Portfolio)
-	require.NotNil(t, conf2.Values)
-	for k, v := range *conf.Values {
-		assert.True(t, v.Equal((*conf2.Values)[k]))
-	}
+	conf2 := ReadConfig(fileName)
+	require.True(t, conf2.Ok())
+
+	assert.Equal(t, conf.AppID, conf2.OrEmpty().AppID)
+	assert.Equal(t, conf.Portfolio, conf2.OrEmpty().Portfolio)
+	assert.Equal(t, price, conf2.OrEmpty().Prices["BTC"])
 }

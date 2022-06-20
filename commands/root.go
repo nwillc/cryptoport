@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"github.com/fatih/color"
 	crypto2 "github.com/nwillc/cryptoport/externalapi/crypto"
-	model2 "github.com/nwillc/cryptoport/model"
+	"github.com/nwillc/cryptoport/model"
+	"github.com/nwillc/genfuncs"
 	"github.com/shopspring/decimal"
 	"github.com/spf13/cobra"
 	"os"
@@ -31,37 +32,29 @@ var rootCmd = &cobra.Command{
 }
 
 func portfolio(_ *cobra.Command, _ []string) {
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		panic(err)
-	}
-	fileName := fmt.Sprintf("%s/%s", homeDir, model2.ConfFile)
-	conf, err := model2.ReadConfig(fileName)
-	if err != nil {
-		panic(err)
-	}
-	client, err := crypto2.NewClient(conf.AppID)
-	if err != nil {
-		panic(err)
-	}
+	homeDirResult := genfuncs.NewResultError(os.UserHomeDir())
+	home := homeDirResult.MustGet()
+	fileName := fmt.Sprintf("%s/%s", home, model.ConfFile)
+	confResult := model.ReadConfig(fileName)
+	conf := confResult.MustGet()
+	clientResult := crypto2.NewClient(conf.AppID)
+	client := clientResult.MustGet()
 	service := crypto2.NewNomicsCurrencyService(client)
 	periods := []crypto2.Period{"1d"}
 	var currencies []crypto2.Currency
 	for _, position := range conf.Portfolio.Positions {
 		currencies = append(currencies, position.Currency)
 	}
-	tickers, err := service.Tickers(currencies, periods)
-	if err != nil {
-		panic(err)
-	}
+	tickersResult := service.Tickers(currencies, periods)
+	tickers := tickersResult.MustGet()
 	values := conf.Portfolio.Values(tickers)
 	var total decimal.Decimal
 	confValues := make(map[crypto2.Currency]decimal.Decimal)
 	var color *color.Color
 	var change decimal.Decimal
 	for k, v := range values {
-		if conf.Values != nil {
-			hv, ok := (*conf.Values)[k.Currency]
+		if conf.Prices != nil {
+			hv, ok := conf.Prices[k.Currency]
 			if ok {
 				color, change = delta(hv, v)
 			}
@@ -71,19 +64,19 @@ func portfolio(_ *cobra.Command, _ []string) {
 		total = total.Add(v)
 	}
 	color = colorWhite
-	if conf.Values != nil {
+	if conf.Prices != nil {
 		var oldValue decimal.Decimal
-		for _, v := range *conf.Values {
+		for _, v := range conf.Prices {
 			oldValue = oldValue.Add(v)
 		}
 		color, change = delta(oldValue, total)
 	}
 	_, _ = color.Printf("%20s %12s (%6s%%)\n", "Total:", total.StringFixed(2), change.StringFixed(2))
 
-	conf.Values = &confValues
-	err = model2.WriteConfig(*conf, fileName)
-	if err != nil {
-		panic(err)
+	conf.Prices = confValues
+	result := model.WriteConfig(*conf, fileName)
+	if !result.Ok() {
+		panic(result.Error())
 	}
 }
 

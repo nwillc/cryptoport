@@ -13,7 +13,7 @@ func MightSkipIntegrationTest(t *testing.T) *Client {
 		t.Skipf("integration test env var %s not set", defaultAppIDEnv)
 		return nil
 	}
-	client, err := NewClient(appID)
-	require.NoError(t, err)
-	return client
+	client := NewClient(appID)
+	require.True(t, client.Ok())
+	return client.OrEmpty()
 }

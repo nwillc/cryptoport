@@ -1,7 +1,6 @@
 package crypto
 
 import (
-	"fmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -18,7 +17,9 @@ func Test_nomics_Ticker(t *testing.T) {
 	require.NotNil(t, service)
 	currencies := []Currency{"BTC", "ETH"}
 	periods := []Period{"1d"}
-	ticker, err := service.Tickers(currencies, periods)
-	assert.NoError(t, err)
-	fmt.Println(ticker)
+	tickers := service.Tickers(currencies, periods)
+	assert.True(t, tickers.Ok())
+	tickers.OrEmpty().ForEach(func(c Currency, ti *TickerInfo) {
+		t.Log(c, *ti)
+	})
 }

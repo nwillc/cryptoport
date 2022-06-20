@@ -2,6 +2,7 @@ package model
 
 import (
 	crypto2 "github.com/nwillc/cryptoport/externalapi/crypto"
+	"github.com/nwillc/genfuncs/container"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -97,13 +98,13 @@ func TestPortfolio_Values(t *testing.T) {
 		Positions []Position
 	}
 	type args struct {
-		prices map[crypto2.Currency]crypto2.TickerInfo
+		prices container.GMap[crypto2.Currency, *crypto2.TickerInfo]
 	}
 	tests := []struct {
 		name   string
 		fields fields
 		args   args
-		want   map[crypto2.Currency]decimal.Decimal
+		want   container.GMap[crypto2.Currency, decimal.Decimal]
 	}{
 		{
 			name: "BTC_Two",
@@ -116,7 +117,7 @@ func TestPortfolio_Values(t *testing.T) {
 				},
 			},
 			args: args{
-				prices: map[crypto2.Currency]crypto2.TickerInfo{
+				prices: container.GMap[crypto2.Currency, *crypto2.TickerInfo]{
 					"BTC": {
 						Currency:  "BTC",
 						Price:     decimal.NewFromFloat(1),
@@ -124,7 +125,7 @@ func TestPortfolio_Values(t *testing.T) {
 					},
 				},
 			},
-			want: map[crypto2.Currency]decimal.Decimal{
+			want: container.GMap[crypto2.Currency, decimal.Decimal]{
 				"BTC": decimal.NewFromFloat(2),
 			},
 		},

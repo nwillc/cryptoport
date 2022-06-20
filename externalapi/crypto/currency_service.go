@@ -1,12 +1,19 @@
 package crypto
 
+import (
+	"github.com/nwillc/genfuncs"
+	"github.com/nwillc/genfuncs/container"
+	"github.com/nwillc/genfuncs/container/gslices"
+	"github.com/nwillc/genfuncs/result"
+)
+
 const (
 	tickerPath = "currencies/ticker"
 )
 
-// CurrencyService provides services to do with crypto currencies
+// CurrencyService provides services to do with cryptocurrencies
 type CurrencyService interface {
-	Tickers(currency []Currency, period []Period) (map[Currency]TickerInfo, error)
+	Tickers(currencies container.GSlice[Currency], periods container.GSlice[Period]) *genfuncs.Result[container.GMap[Currency, *TickerInfo]]
 }
 
 // NomicsCurrencyService is a CurrencyService implemented using Nomics API.
@@ -24,19 +31,15 @@ func NewNomicsCurrencyService(client *Client) *NomicsCurrencyService {
 }
 
 // Tickers returns TickerInfo for the Currency list and Period list provides.
-func (n NomicsCurrencyService) Tickers(currencies []Currency, periods []Period) (map[Currency]TickerInfo, error) {
-	params := map[string]string{
+func (n NomicsCurrencyService) Tickers(currencies container.GSlice[Currency], periods container.GSlice[Period]) *genfuncs.Result[container.GMap[Currency, *TickerInfo]] {
+	params := container.GMap[string, string]{
 		"ids":      CurrencyList(currencies),
 		"interval": PeriodList(periods),
 	}
-	var tiList = make([]TickerInfo, 0)
-	err := n.client.get(tickerPath, params, &tiList)
-	if err != nil {
-		return nil, err
-	}
-	var mapped = make(map[Currency]TickerInfo)
-	for _, ti := range tiList {
-		mapped[ti.Currency] = ti
-	}
-	return mapped, nil
+	tiResult := n.client.getTickerInfo(tickerPath, params)
+	return result.Map(tiResult, func(list *container.GSlice[TickerInfo]) *genfuncs.Result[container.GMap[Currency, *TickerInfo]] {
+		return genfuncs.NewResult(gslices.Associate(*list, func(t TickerInfo) (Currency, *TickerInfo) {
+			return t.Currency, &t
+		}))
+	})
 }
