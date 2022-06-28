@@ -4,10 +4,10 @@ go 1.18
 
 require (
 	github.com/fatih/color v1.13.0
-	github.com/nwillc/genfuncs v0.16.2
+	github.com/nwillc/genfuncs v0.18.3
 	github.com/shopspring/decimal v1.3.1
 	github.com/spf13/cobra v1.4.0
-	github.com/stretchr/testify v1.7.2
+	github.com/stretchr/testify v1.7.5
 )
 
 require (

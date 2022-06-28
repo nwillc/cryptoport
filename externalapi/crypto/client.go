@@ -5,7 +5,7 @@ import (
 	"github.com/nwillc/cryptoport/gjson"
 	"github.com/nwillc/genfuncs"
 	"github.com/nwillc/genfuncs/container"
-	"github.com/nwillc/genfuncs/result"
+	"github.com/nwillc/genfuncs/results"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -37,7 +37,7 @@ func DefaultAppID() AppID {
 // NewClient creates a new Client using given AppID.
 func NewClient(appID AppID) *genfuncs.Result[*Client] {
 	service := genfuncs.NewResultError(url.Parse(defaultHost))
-	return result.Map(service, func(url *url.URL) *genfuncs.Result[*Client] {
+	return results.Map(service, func(url *url.URL) *genfuncs.Result[*Client] {
 		return genfuncs.NewResult(&Client{
 			appID:    appID,
 			service:  url,
@@ -48,16 +48,16 @@ func NewClient(appID AppID) *genfuncs.Result[*Client] {
 
 func (c *Client) getTickerInfo(path string, queryArgs container.GMap[string, string]) *genfuncs.Result[*container.GSlice[TickerInfo]] {
 	absURL := c.buildURL(path, queryArgs)
-	response := result.Map(absURL, func(url *url.URL) *genfuncs.Result[*http.Response] {
+	response := results.Map(absURL, func(url *url.URL) *genfuncs.Result[*http.Response] {
 		return genfuncs.NewResultError(http.Get(url.String()))
 	})
-	body := result.Map(response, func(response *http.Response) *genfuncs.Result[[]byte] {
+	body := results.Map(response, func(response *http.Response) *genfuncs.Result[[]byte] {
 		if response.StatusCode != 200 {
 			return genfuncs.NewError[[]byte](fmt.Errorf("http response %d", response.StatusCode))
 		}
 		return genfuncs.NewResultError(ioutil.ReadAll(response.Body))
 	})
-	return result.Map(body, func(bytes []byte) *genfuncs.Result[*container.GSlice[TickerInfo]] {
+	return results.Map(body, func(bytes []byte) *genfuncs.Result[*container.GSlice[TickerInfo]] {
 		return gjson.Unmarshal[container.GSlice[TickerInfo]](bytes)
 	})
 }
@@ -71,7 +71,7 @@ func (c *Client) buildURL(path string, queryArgs container.GMap[string, string])
 	rawURL := fmt.Sprintf("https://%s/%s/%s?%s",
 		c.service.String(), c.basePath, path, params.Encode())
 	parsed := genfuncs.NewResultError(url.Parse(rawURL))
-	return result.Map(parsed, func(url *url.URL) *genfuncs.Result[*url.URL] {
+	return results.Map(parsed, func(url *url.URL) *genfuncs.Result[*url.URL] {
 		return genfuncs.NewResult(c.service.ResolveReference(url))
 	})
 }

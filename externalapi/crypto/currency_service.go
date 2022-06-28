@@ -3,8 +3,8 @@ package crypto
 import (
 	"github.com/nwillc/genfuncs"
 	"github.com/nwillc/genfuncs/container"
-	"github.com/nwillc/genfuncs/container/gslices"
-	"github.com/nwillc/genfuncs/result"
+	"github.com/nwillc/genfuncs/container/sequences"
+	"github.com/nwillc/genfuncs/results"
 )
 
 const (
@@ -37,8 +37,8 @@ func (n NomicsCurrencyService) Tickers(currencies container.GSlice[Currency], pe
 		"interval": PeriodList(periods),
 	}
 	tiResult := n.client.getTickerInfo(tickerPath, params)
-	return result.Map(tiResult, func(list *container.GSlice[TickerInfo]) *genfuncs.Result[container.GMap[Currency, *TickerInfo]] {
-		return genfuncs.NewResult(gslices.Associate(*list, func(t TickerInfo) (Currency, *TickerInfo) {
+	return results.Map(tiResult, func(list *container.GSlice[TickerInfo]) *genfuncs.Result[container.GMap[Currency, *TickerInfo]] {
+		return genfuncs.NewResult(sequences.Associate[TickerInfo](*list, func(t TickerInfo) (Currency, *TickerInfo) {
 			return t.Currency, &t
 		}))
 	})

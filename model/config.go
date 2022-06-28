@@ -4,7 +4,7 @@ import (
 	crypto2 "github.com/nwillc/cryptoport/externalapi/crypto"
 	"github.com/nwillc/cryptoport/gjson"
 	"github.com/nwillc/genfuncs"
-	"github.com/nwillc/genfuncs/result"
+	"github.com/nwillc/genfuncs/results"
 	"github.com/shopspring/decimal"
 	"io/ioutil"
 	"os"
@@ -24,10 +24,10 @@ type Config struct {
 
 // WriteConfig writes the Config given, as JSON to the filename given.
 func WriteConfig(config Config, filename string) *genfuncs.Result[int] {
-	results := gjson.Marshal(&config)
-	return result.Map(results, func(bytes []byte) *genfuncs.Result[int] {
+	result := gjson.Marshal(&config)
+	return results.Map(result, func(bytes []byte) *genfuncs.Result[int] {
 		file := genfuncs.NewResultError(os.Create(filename))
-		return result.Map(file, func(f *os.File) *genfuncs.Result[int] {
+		return results.Map(file, func(f *os.File) *genfuncs.Result[int] {
 			defer func() {
 				_ = f.Close()
 			}()
@@ -39,7 +39,7 @@ func WriteConfig(config Config, filename string) *genfuncs.Result[int] {
 // ReadConfig instantiates a Config from the JSON filename given.
 func ReadConfig(filename string) *genfuncs.Result[*Config] {
 	readFile := genfuncs.NewResultError(ioutil.ReadFile(filename))
-	return result.Map(readFile, func(bytes []byte) *genfuncs.Result[*Config] {
+	return results.Map(readFile, func(bytes []byte) *genfuncs.Result[*Config] {
 		return gjson.Unmarshal[Config](bytes)
 	})
 }
