@@ -1,6 +1,7 @@
 package crypto
 
 import (
+	"github.com/nwillc/genfuncs"
 	"github.com/nwillc/genfuncs/container"
 	"github.com/nwillc/genfuncs/container/sequences"
 	"github.com/shopspring/decimal"
@@ -23,7 +24,7 @@ func (c Currency) String() string {
 
 // CurrencyList formats a list of Currency into a string.
 func CurrencyList(currencies container.GSlice[Currency]) string {
-	return sequences.JoinToString[Currency](currencies, func(c Currency) string { return c.String() }, ",", "", "")
+	return sequences.JoinToString[Currency](currencies, genfuncs.StringerToString[Currency](), ",", "", "")
 }
 
 // PeriodList formats a list of Period into a string.

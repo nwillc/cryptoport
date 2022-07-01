@@ -3,9 +3,10 @@ package commands
 import (
 	"fmt"
 	"github.com/fatih/color"
-	crypto2 "github.com/nwillc/cryptoport/externalapi/crypto"
+	"github.com/nwillc/cryptoport/externalapi/crypto"
 	"github.com/nwillc/cryptoport/model"
 	"github.com/nwillc/genfuncs"
+	"github.com/nwillc/genfuncs/results"
 	"github.com/shopspring/decimal"
 	"github.com/spf13/cobra"
 	"os"
@@ -32,16 +33,30 @@ var rootCmd = &cobra.Command{
 }
 
 func portfolio(_ *cobra.Command, _ []string) {
-	homeDirResult := genfuncs.NewResultError(os.UserHomeDir())
-	home := homeDirResult.MustGet()
-	fileName := fmt.Sprintf("%s/%s", home, model.ConfFile)
-	confResult := model.ReadConfig(fileName)
-	conf := confResult.MustGet()
-	clientResult := crypto2.NewClient(conf.AppID)
-	client := clientResult.MustGet()
-	service := crypto2.NewNomicsCurrencyService(client)
-	periods := []crypto2.Period{"1d"}
-	var currencies []crypto2.Currency
+	var fileName string
+	conf := results.Map[string, *model.Config](
+		results.Map(
+			genfuncs.NewResultError(os.UserHomeDir()),
+			func(home string) *genfuncs.Result[string] {
+				return genfuncs.NewResult(fmt.Sprintf("%s/%s", home, model.ConfFile))
+			}),
+		func(file string) *genfuncs.Result[*model.Config] {
+			fileName = file
+			return model.ReadConfig(file)
+		}).
+		OnFailure(func(e error) { panic(fmt.Errorf("unable to loaad config: %w", e)) }).
+		OrEmpty()
+
+	service := results.Map[*crypto.Client, *crypto.NomicsCurrencyService](
+		crypto.NewClient(conf.AppID),
+		func(client *crypto.Client) *genfuncs.Result[*crypto.NomicsCurrencyService] {
+			return genfuncs.NewResult(crypto.NewNomicsCurrencyService(client))
+		}).
+		OnFailure(func(e error) { panic(fmt.Errorf("could not creaate service: %w", e)) }).
+		OrEmpty()
+
+	periods := []crypto.Period{"1d"}
+	var currencies []crypto.Currency
 	for _, position := range conf.Portfolio.Positions {
 		currencies = append(currencies, position.Currency)
 	}
@@ -49,7 +64,7 @@ func portfolio(_ *cobra.Command, _ []string) {
 	tickers := tickersResult.MustGet()
 	values := conf.Portfolio.Values(tickers)
 	var total decimal.Decimal
-	confValues := make(map[crypto2.Currency]decimal.Decimal)
+	confValues := make(map[crypto.Currency]decimal.Decimal)
 	var color *color.Color
 	var change decimal.Decimal
 	for k, v := range values {
@@ -74,10 +89,8 @@ func portfolio(_ *cobra.Command, _ []string) {
 	_, _ = color.Printf("%20s %12s (%6s%%)\n", "Total:", total.StringFixed(2), change.StringFixed(2))
 
 	conf.Prices = confValues
-	result := model.WriteConfig(*conf, fileName)
-	if !result.Ok() {
-		panic(result.Error())
-	}
+	model.WriteConfig(*conf, fileName).
+		OnFailure(func(e error) { panic(fmt.Errorf("could not update config: %w", e)) })
 }
 
 func delta(previous, current decimal.Decimal) (*color.Color, decimal.Decimal) {
